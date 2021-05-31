@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-export class DgraphModule {
+export class Dgraph {
 
   private _type!: string;
 
