@@ -205,7 +205,8 @@ export class Dgraph {
       }
 
       if (isUpdate || isAdd || isUpsert || isDelete) {
-        q = { [m._type]: q, numUids: 1 };
+        q.numUids = 1;
+        q = q ? { [m._type]: q } : q;
       }
       if (isUpsert || isAdd || isDelete) {
         q.msg = 1;
@@ -222,6 +223,9 @@ export class Dgraph {
       }
       // filter
       if (m._filter) {
+        if (typeof m._filter === 'string') {
+          m._filter = { id: m._filter };
+        }
         if (isUpdate) {
           patch.filter = m._filter;
         } else {
@@ -242,6 +246,9 @@ export class Dgraph {
         }
         if (isUpdate) {
           patch.set = m._set;
+          if (!q.__args) {
+            q.__args = {};
+          }
           q.__args.input = patch;
         }
       }
