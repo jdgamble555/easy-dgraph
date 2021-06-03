@@ -208,7 +208,7 @@ export class Dgraph {
         q = Object.keys(q).length === 0 ? q : { [m._type]: q };
         q.numUids = 1;
       }
-      if (isUpsert || isAdd || isDelete) {
+      if (isDelete) {
         q.msg = 1;
       }
 
