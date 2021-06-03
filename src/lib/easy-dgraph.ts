@@ -1,257 +1,261 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+import { jsonToGraphQLQuery } from 'json-to-graphql-query';
+
+interface Method {
+  _type: string;
+  _method: string;
+  _q: any;
+  _alias?: string;
+  _filter?: any;
+  _set?: any;
+};
+
+interface Replace {
+  _find: string;
+  _replace: string;
+}
+
 export class Dgraph {
 
-  private _type!: string;
-
+  private _operation = 'query';
+  private _operationSet = false;
+  private _methods: Method[] = [];
   private _method!: string;
-  private _call!: string;
   private _q!: any;
-  private _gql!: string;
+  private _type!: string;
+  private _alias!: string;
+  private _filter!: any;
+  private _set!: any;
+  private _opts: any;
+  private _search: Replace[] = [
+    { _find: '__cascade', _replace: '__directives' },
+    { _find: '__filter', _replace: '__args' },
+    { _find: '__order', _replace: '__args' },
+    { _find: '__offset', _replace: '__args' },
+    { _find: '__first', _replace: '__args' }
+  ]
 
   constructor(type?: string) {
     if (type) {
-      this.type(type);
+      this._type = type;
     }
+    this._opts = {};
   }
 
-  type(type: string): this {
+  toGQL(q: any) {
+    return jsonToGraphQLQuery(q, this._opts);
+  }
+
+  type(type: string, alias?: string): this {
+    if (this._type) {
+      this.addMethod();
+    }
     this._type = type;
+    if (alias) {
+      this._alias = alias;
+    }
+    return this;
+  }
+
+  options(opts: any): this {
+    this._opts = { ...this._opts, ...opts };
+    return this;
+  }
+
+  pretty(): this {
+    this._opts.pretty = true;
+    return this;
+  }
+
+  operation(operation: string): this {
+    this._operation = operation;
+    this._operationSet = true;
     return this;
   }
 
   get(q: any): this {
-    this._call = 'query';
-    this._method = 'get';
     this._q = q;
+    this._method = 'get';
     return this;
   }
 
   aggregate(q: any): this {
-    this._call = 'query';
-    this._method = 'aggregate';
     this._q = q;
+    this._method = 'aggregate';
     return this;
   }
 
   query(q: any): this {
-    this._call = 'query';
-    this._method = 'query';
     this._q = q;
+    this._method = 'query';
     return this;
   }
 
-  add(q: any): this {
-    this._call = 'mutation';
-    this._method = 'add';
+  add(q: any, upsert = false): this {
+    if (!this._operationSet) {
+      this._operation = 'mutation';
+    }
     this._q = q;
+    this._method = upsert ? 'upsert' : 'add';
     return this;
+  }
+
+  upsert(q: any): this {
+    return this.add(q, true);
   }
 
   update(q: any): this {
-    this._call = 'mutation';
-    this._method = 'update';
+    if (!this._operationSet) {
+      this._operation = 'mutation';
+    }
     this._q = q;
+    this._method = 'update';
     return this;
   }
 
   delete(q: any): this {
-    this._call = 'mutation';
+    if (!this._operationSet) {
+      this._operation = 'mutation';
+    }
+    this._q = q;
     this._method = 'delete';
-    this._q = q;
     return this;
   }
 
-  customQuery(q: any): this {
-    this._call = 'query';
+  customQuery(q?: any): this {
+    this._q = q || {};
     this._method = 'custom';
-    this._q = q;
     return this;
   }
 
-  customMutation(q: any): this {
-    this._call = 'mutation';
-    this._method = 'custom';
-    this._q = q;
-    return this;
-  }
-
-  generateSub(): any {
-    this._call = 'subscription';
-    this.addGQL();
-    return {
-      call: this._call,
-      gql: this._gql,
-      method: this._method
-    };
-  }
-
-  generate(): any {
-    this.addGQL();
-    return {
-      call: this._call,
-      gql: this._gql,
-      method: this._method
-    };
-  }
-
-  private addGQL(): void {
-    this._gql = this.generateQuery();
-  }
-
-  private generateQuery(): string {
-
-    // subscription or query
-    let exp = this._call;
-
-    // generate proper titles
-    const title = this.titleType();
-
-    exp += ` ${this._method}${title} { `;
-
-    if (this._method === 'custom') {
-
-      exp += this._type + '(';
-      if (this._call === 'mutation') {
-        exp += this.stringify(this._q._set).slice(1, -1);
-      } else {
-        exp += this.stringify(this._q._filter).slice(1, -1);
-      }
-      exp += ')';
-      if (this._call === 'query') {
-        exp += ' { ';
-        exp += Object.keys(this._q._select).join(' ');
-        exp += ' }';
-      }
-      return exp + ' }';
+  customMutation(q?: any): this {
+    if (!this._operationSet) {
+      this._operation = 'mutation';
     }
+    this._q = q || {};
+    this._method = 'custom';
+    return this;
+  }
 
-    // generate query or get, remove 's'
-    exp += `${this._method}${title}`;
+  set(q: any) {
+    this._set = q;
+    return this;
+  }
 
-    const isMutation = this._call === 'mutation';
-    const isWrite = this._method === 'add'
-      || this._method === 'update';
+  filter(q: any) {
+    this._filter = q;
+    return this;
+  }
 
-    if (isMutation) {
-      exp += '(';
-      if (isWrite) {
-        exp += 'input: ';
-        if (this._method === 'add') {
-          exp += this.stringify(this._q._set);
+  private addMethod() {
+
+    this._methods.push({
+      _method: this._method,
+      _q: this._q,
+      _type: this._type,
+      _alias: this._alias,
+      _filter: this._filter,
+      _set: this._set
+    });
+    this._type = '';
+    this._alias = '';
+    this._filter = undefined;
+    this._set = undefined;
+  }
+
+  private replace(obj: any, find: string, replace: string) {
+    for (const i in obj) {
+      if (i === find) {
+        let value = obj[i];
+        if (typeof value !== 'object') {
+          value = true;
+        }
+        const newKey = find.substring(2);
+        delete obj[i];
+        obj[replace] = { [newKey]: value };
+      } else if (typeof obj[i] === 'object') {
+        obj[i] = this.replace(obj[i], find, replace);
+      }
+    }
+    return obj;
+  }
+
+  private titleType(type: string): string {
+    return type.charAt(0).toUpperCase()
+      + type.substr(1).toLowerCase();
+  }
+
+  build(): any {
+
+    this.addMethod();
+
+    const obj: any = {};
+
+    for (const m of this._methods) {
+
+      const isUpdate = m._method === 'update';
+      const isUpsert = m._method === 'upsert';
+      const isAdd = m._method === 'add';
+      const isDelete = m._method === 'delete';
+
+      let q: any = m._q;
+
+      // shortcuts replace
+      for (const r of this._search) {
+        q = this.replace(q, r._find, r._replace);
+      }
+
+      if (isUpdate || isAdd || isUpsert || isDelete) {
+        q = { [m._type]: q, numUids: 1 };
+      }
+      if (isUpsert || isAdd || isDelete) {
+        q.msg = 1;
+      }
+
+      let key = m._method + this.titleType(m._type);
+
+      const patch: any = {};
+
+      // alias
+      if (m._alias) {
+        key = m._alias;
+        q.__aliasFor = m._method + this.titleType(m._type);
+      }
+      // filter
+      if (m._filter) {
+        if (isUpdate) {
+          patch.filter = m._filter;
         } else {
-          exp += this.stringify({
-            filter: this._q._find,
-            set: this._q._set
-          });
+          q.__args = {};
+          q.__args.filter = m._filter;
         }
       }
-      if (this._method === 'delete') {
-        exp += `filter: ${this.stringify(this._q._find)}`;
+      // set
+      if (m._set) {
+        if (isAdd || isUpsert) {
+          if (!q.__args) {
+            q.__args = {};
+          }
+          q.__args.input = m._set;
+          if (isUpsert) {
+            q.__args.upsert = true;
+          }
+        }
+        if (isUpdate) {
+          patch.set = m._set;
+          q.__args.input = patch;
+        }
       }
-      if (this._q._upsert) {
-        exp += ', upsert: true';
-      }
-      exp += `) {`;
-      if (this._method === 'delete') {
-        exp += ' msg';
-      }
-      if (isWrite) {
-        exp += ' numUids';
-      }
-      if (this._q._select) {
-        exp += ` ${this._type.toLowerCase()}`;
-      }
-    }
-    if (this._q._select) {
-      exp += this.stripQuery(this._q);
-    }
-    exp += ' }';
-
-    if (isMutation) {
-      exp += ' }';
+      obj[key] = q;
     }
 
-    return exp;
+    return jsonToGraphQLQuery({
+      [this._operation]: obj
+    }, this._opts).split(' (').join('(');
   }
 
-  private titleType(): string {
-    return this._type.charAt(0).toUpperCase()
-      + this._type.substr(1).toLowerCase();
-  }
-
-  private stripQuery(q: any): string {
-
-    const hasInput =
-      q._filter ||
-      q._order ||
-      q._first ||
-      q._offset;
-
-    let g = '';
-
-    if (hasInput) {
-      g += '(';
-      if (q._filter) {
-        g += this._method === 'get'
-          ? this.stringify(q._filter).slice(1, -1)
-          : 'filter: ' + this.stringify(q._filter);
-      }
-      if (q._order) {
-        if (q._filter) {
-          g += ', ';
-        }
-        g += 'order: ' + this.stringify(q._order);
-      }
-      if (q._offset) {
-        if (q._filter || q._order) {
-          g += ', ';
-        }
-        g += 'offset: ' + q._offset;
-      }
-      if (q._first) {
-        if (q._filter || q._order || q._offset) {
-          g += ', ';
-        }
-        g += 'first: ' + q._first;
-      }
-      g += ')';
-    }
-    if (q._cascade) {
-      g += ' @cascade';
-      if (typeof q._cascade === 'object') {
-        g += `(${this.stringify(q._cascade)})`;
-      }
-    }
-    g += ' { ';
-
-    if (q._select) {
-      const keys = Object.keys(q._select);
-
-      for (const k of keys) {
-        g += k;
-        if (keys[keys.length - 1] !== k) {
-          g += ' ';
-        }
-        if (typeof q._select[k] === 'object') {
-          g += this.stripQuery(q._select[k]);
-        }
-      }
-    }
-    return g + ' }';
-  }
-
-  private stringify(obj_from_json: any): any {
-    if (typeof obj_from_json !== "object" || Array.isArray(obj_from_json)) {
-      // not an object, stringify using native function
-      return JSON.stringify(obj_from_json);
-    }
-    // Implements recursive object serialization according to JSON spec
-    // but without quotes around the keys.
-    const props = Object
-      .keys(obj_from_json)
-      .map(key => `${key}:${this.stringify(obj_from_json[key])}`)
-      .join(",");
-    return `{${props}}`;
+  buildSubscription(): any {
+    this.operation('subscription');
+    return this.build();
   }
 
 }
