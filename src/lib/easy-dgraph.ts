@@ -7,6 +7,7 @@ interface Method {
   _alias?: string;
   _filter?: any;
   _set?: any;
+  _cascade?: any;
 };
 
 interface Replace {
@@ -21,6 +22,7 @@ export class Dgraph {
   private _methods: Method[] = [];
   private _method!: string;
   private _q!: any;
+  private _cascade!: any;
   private _type!: string;
   private _alias!: string;
   private _filter!: any;
@@ -32,7 +34,7 @@ export class Dgraph {
     { _find: '__order', _replace: '__args' },
     { _find: '__offset', _replace: '__args' },
     { _find: '__first', _replace: '__args' }
-  ]
+  ];
 
   constructor(type?: string) {
     if (type) {
@@ -136,13 +138,24 @@ export class Dgraph {
     return this;
   }
 
-  set(q: any) {
+  set(q: any): this {
     this._set = q;
     return this;
   }
 
-  filter(q: any) {
+  filter(q: any): this {
     this._filter = q;
+    return this;
+  }
+
+  cascade(q: any): this {
+    this._cascade = q;
+    return this;
+  }
+
+  cascadeDelete(q: any): this {
+
+    this._q = q;
     return this;
   }
 
@@ -154,12 +167,14 @@ export class Dgraph {
       _type: this._type,
       _alias: this._alias,
       _filter: this._filter,
+      _cascade: this._cascade,
       _set: this._set
     });
     this._type = '';
     this._alias = '';
     this._filter = undefined;
     this._set = undefined;
+    this._cascade = undefined;
   }
 
   private replace(obj: any, find: string, replace: string) {
@@ -199,6 +214,11 @@ export class Dgraph {
 
       let q: any = m._q;
 
+      // cascade
+      if (m._cascade) {
+        q = { __cascade: m._cascade, ...q };
+      }
+
       // shortcuts replace
       for (const r of this._search) {
         q = this.replace(q, r._find, r._replace);
@@ -223,7 +243,7 @@ export class Dgraph {
       }
       // filter
       if (m._filter) {
-        if (typeof m._filter === 'string') {
+        if (typeof m._filter === 'string' || Array.isArray(m._filter)) {
           m._filter = { id: m._filter };
         }
         if (isUpdate) {
