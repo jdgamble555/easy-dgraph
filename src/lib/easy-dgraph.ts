@@ -16,7 +16,7 @@ interface Replace {
 
 export class Dgraph {
 
-  private _operation = 'query';
+  _operation = 'query';
   private _operationSet = false;
   private _methods: Method[] = [];
   private _method!: string;
