@@ -205,7 +205,7 @@ export class Dgraph {
       }
 
       if (isUpdate || isAdd || isUpsert || isDelete) {
-        q = q ? { [m._type]: q } : q;
+        q = Object.keys(q).length === 0 ? q : { [m._type]: q };
         q.numUids = 1;
       }
       if (isUpsert || isAdd || isDelete) {
