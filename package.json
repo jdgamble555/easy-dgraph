@@ -1,6 +1,6 @@
 {
   "name": "easy-dgraph",
-  "version": "1.0.7",
+  "version": "1.0.9",
   "description": "A quick way to generate graphql queries in dgraph.",
   "main": "build/main/index.js",
   "typings": "build/main/index.d.ts",

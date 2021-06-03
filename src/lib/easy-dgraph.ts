@@ -205,8 +205,8 @@ export class Dgraph {
       }
 
       if (isUpdate || isAdd || isUpsert || isDelete) {
-        q.numUids = 1;
         q = q ? { [m._type]: q } : q;
+        q.numUids = 1;
       }
       if (isUpsert || isAdd || isDelete) {
         q.msg = 1;
