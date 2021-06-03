@@ -90,33 +90,33 @@ export class Dgraph {
     return this;
   }
 
-  add(q: any, upsert = false): this {
+  add(q?: any, upsert = false): this {
     if (!this._operationSet) {
       this._operation = 'mutation';
     }
-    this._q = q;
+    this._q = q || {};
     this._method = upsert ? 'upsert' : 'add';
     return this;
   }
 
-  upsert(q: any): this {
+  upsert(q?: any): this {
     return this.add(q, true);
   }
 
-  update(q: any): this {
+  update(q?: any): this {
     if (!this._operationSet) {
       this._operation = 'mutation';
     }
-    this._q = q;
+    this._q = q || {};
     this._method = 'update';
     return this;
   }
 
-  delete(q: any): this {
+  delete(q?: any): this {
     if (!this._operationSet) {
       this._operation = 'mutation';
     }
-    this._q = q;
+    this._q = q || {};
     this._method = 'delete';
     return this;
   }
