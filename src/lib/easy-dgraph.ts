@@ -8,6 +8,9 @@ interface Method {
   _filter?: any;
   _set?: any;
   _cascade?: any;
+  _first?: number;
+  _order?: any;
+  _offset?: number;
 };
 
 interface Replace {
@@ -28,6 +31,9 @@ export class Dgraph {
   private _filter!: any;
   private _set!: any;
   private _opts: any;
+  private _first!: number;
+  private _order!: any;
+  private _offset!: number;
   private _search: Replace[] = [
     { _find: '__cascade', _replace: '__directives' },
     { _find: '__filter', _replace: '__args' },
@@ -153,9 +159,18 @@ export class Dgraph {
     return this;
   }
 
-  cascadeDelete(q: any): this {
+  first(n: number): this {
+    this._first = n;
+    return this;
+  }
 
-    this._q = q;
+  order(q: any): this {
+    this._order = q;
+    return this;
+  }
+
+  offset(n: number): this {
+    this._offset = n;
     return this;
   }
 
@@ -168,13 +183,19 @@ export class Dgraph {
       _alias: this._alias,
       _filter: this._filter,
       _cascade: this._cascade,
-      _set: this._set
+      _set: this._set,
+      _first: this._first,
+      _order: this._order,
+      _offset: this._offset
     });
     this._type = '';
     this._alias = '';
     this._filter = undefined;
     this._set = undefined;
     this._cascade = undefined;
+    this._first = undefined;
+    this._order = undefined;
+    this._offset = undefined;
   }
 
   private replace(obj: any, find: string, replace: string) {
@@ -213,6 +234,21 @@ export class Dgraph {
       const isDelete = m._method === 'delete';
 
       let q: any = m._q;
+
+      // first
+      if (m._first) {
+        q = { __first: m._first, ...q };
+      }
+
+      // order
+      if (m._order) {
+        q = { __order: m._order, ...q };
+      }
+
+      // offset
+      if (m._offset) {
+        q = { __offset: m._offset, ...q };
+      }
 
       // cascade
       if (m._cascade) {
