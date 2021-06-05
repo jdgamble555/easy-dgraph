@@ -8,9 +8,9 @@ interface Method {
   _filter?: any;
   _set?: any;
   _cascade?: any;
-  _first?: number;
+  _first?: string;
   _order?: any;
-  _offset?: number;
+  _offset?: string;
 };
 
 interface Replace {
@@ -31,9 +31,9 @@ export class Dgraph {
   private _filter!: any;
   private _set!: any;
   private _opts: any;
-  private _first!: number;
+  private _first!: string;
   private _order!: any;
-  private _offset!: number;
+  private _offset!: string;
   private _search: Replace[] = [
     { _find: '__cascade', _replace: '__directives' },
     { _find: '__filter', _replace: '__args' },
@@ -159,8 +159,10 @@ export class Dgraph {
     return this;
   }
 
-  first(n: number): this {
-    this._first = n;
+  first(n: number | string): this {
+    this._first = typeof n === 'number'
+      ? n.toString()
+      : n;
     return this;
   }
 
@@ -169,8 +171,10 @@ export class Dgraph {
     return this;
   }
 
-  offset(n: number): this {
-    this._offset = n;
+  offset(n: number | string): this {
+    this._offset = typeof n === 'number'
+      ? n.toString()
+      : n;
     return this;
   }
 
