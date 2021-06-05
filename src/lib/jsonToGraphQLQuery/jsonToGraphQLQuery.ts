@@ -34,16 +34,13 @@ function stringify(obj_from_json: any): string {
 }
 
 /***
- * edited from original code to support no quotes 
- * on order argument and working filters
+ * edited from original code to support no quotes on order
  ***/
 function buildArgs(argsObj: any): string {
     const args = [];
     for (const argName in argsObj) {
 
-        let values = argName === 'filter'
-            ? JSON.stringify(argsObj[argName])
-            : stringify(argsObj[argName]);
+        let values = stringify(argsObj[argName]);
 
         if (argName === 'order') {
             values = values.split('"').join("");
