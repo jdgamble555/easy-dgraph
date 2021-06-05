@@ -201,8 +201,12 @@ export class Dgraph {
   private replace(obj: any, find: string, replace: string) {
     for (const i in obj) {
       if (i === find) {
-        const value = obj[i];
+        let value = obj[i];
         const newKey = find.substring(2);
+        // stringify order agrument without quotes
+        if (newKey === 'order') {
+          value = JSON.stringify(value).replace(/"/g, '');
+        }
         delete obj[i];
         obj[replace] = { [newKey]: value, ...obj[replace] };
       } else if (typeof obj[i] === 'object') {
