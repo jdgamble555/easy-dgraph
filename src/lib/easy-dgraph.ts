@@ -234,8 +234,10 @@ export class Dgraph {
 
       // get method
       if (m._method === 'get') {
-        q.__args = {};
-        if (m._filter === 'string') {
+        if (!q.__args) {
+          q.__args = {};
+        }
+        if (typeof m._filter === 'string') {
           q.__args.id = m._filter;
         } else {
           q.__args = m._filter;
