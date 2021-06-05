@@ -74,8 +74,8 @@ export class Dgraph {
     return this;
   }
 
-  operation(operation: string): this {
-    this._operation = operation;
+  operation(op: string): this {
+    this._operation = op;
     this._operationSet = true;
     return this;
   }

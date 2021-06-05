@@ -1,3 +1,5 @@
+// Modified code taken from: https://github.com/dupski/json-to-graphql-query
+
 import { EnumType } from './types/EnumType';
 import { VariableType } from './types/VariableType';
 
