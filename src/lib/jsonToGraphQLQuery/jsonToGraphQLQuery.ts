@@ -37,7 +37,10 @@ function stringify(obj_from_json: any): string {
 function buildArgs(argsObj: any): string {
     const args = [];
     for (const argName in argsObj) {
-        const values = stringify(argsObj[argName]).split('"').join("");
+        let values = stringify(argsObj[argName])
+        if (argName === 'order') {
+           values = values.split('"').join("");
+        }
         args.push(`${argName}: ${values}`);
     }
     return args.join(', ');
