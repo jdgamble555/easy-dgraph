@@ -8,9 +8,9 @@ interface Method {
   _filter?: any;
   _set?: any;
   _cascade?: any;
-  _first?: string;
+  _first?: number;
   _order?: any;
-  _offset?: string;
+  _offset?: number;
 };
 
 interface Replace {
@@ -31,9 +31,9 @@ export class Dgraph {
   private _filter!: any;
   private _set!: any;
   private _opts: any;
-  private _first!: string;
+  private _first!: number;
   private _order!: any;
-  private _offset!: string;
+  private _offset!: number;
   private _search: Replace[] = [
     { _find: '__cascade', _replace: '__directives' },
     { _find: '__filter', _replace: '__args' },
@@ -159,10 +159,8 @@ export class Dgraph {
     return this;
   }
 
-  first(n: number | string): this {
-    this._first = typeof n === 'number'
-      ? n.toString()
-      : n;
+  first(n: number): this {
+    this._first = n;
     return this;
   }
 
@@ -171,10 +169,8 @@ export class Dgraph {
     return this;
   }
 
-  offset(n: number | string): this {
-    this._offset = typeof n === 'number'
-      ? n.toString()
-      : n;
+  offset(n: number): this {
+    this._offset = n;
     return this;
   }
 
@@ -205,10 +201,7 @@ export class Dgraph {
   private replace(obj: any, find: string, replace: string) {
     for (const i in obj) {
       if (i === find) {
-        let value = obj[i];
-        if (typeof value !== 'object' && typeof value !== 'string') {
-          value = true;
-        }
+        const value = obj[i];
         const newKey = find.substring(2);
         delete obj[i];
         obj[replace] = { [newKey]: value };
