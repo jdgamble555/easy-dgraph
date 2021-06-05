@@ -206,7 +206,7 @@ export class Dgraph {
     for (const i in obj) {
       if (i === find) {
         let value = obj[i];
-        if (typeof value !== 'object') {
+        if (typeof value !== 'object' && typeof value !== 'string') {
           value = true;
         }
         const newKey = find.substring(2);
