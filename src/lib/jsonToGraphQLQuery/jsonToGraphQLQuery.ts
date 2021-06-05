@@ -33,7 +33,7 @@ function stringify(obj_from_json: any): string {
     return `{${props}}`;
 }
 
-// edit from original code to support no quotes
+// edit from original code to support no quotes on order argument
 function buildArgs(argsObj: any): string {
     const args = [];
     for (const argName in argsObj) {
