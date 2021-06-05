@@ -337,7 +337,7 @@ export class optimistic {
 
   add(record: any, idName = 'id', addId = true) {
     if (idName && addId) {
-      record = { idName: this.randString(), ...record };
+      record = { [idName]: this.randString(), ...record };
     }
     this._data = [...this._data, record];
     return this;
