@@ -204,7 +204,7 @@ export class Dgraph {
         const value = obj[i];
         const newKey = find.substring(2);
         delete obj[i];
-        obj[replace] = { [newKey]: value };
+        obj[replace] = { [newKey]: value, ...obj[replace] };
       } else if (typeof obj[i] === 'object') {
         obj[i] = this.replace(obj[i], find, replace);
       }
