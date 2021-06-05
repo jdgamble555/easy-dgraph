@@ -283,8 +283,8 @@ export class Dgraph {
         if (typeof m._filter === 'object') {
           if (Object.keys(m._filter).length === 1) {
             const key = Object.keys(m._filter)[0];
-            if (!('eq' in m._filter[key])) {
-              m._filter = { [key]: { eq: m._filter[key] } };
+            if (m._filter[key] !== 'object') {
+              m._filter = { [key]: { 'eq': m._filter[key] } };
             }
           }
         }
