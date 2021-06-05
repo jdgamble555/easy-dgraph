@@ -232,6 +232,17 @@ export class Dgraph {
 
       let q: any = m._q;
 
+      // get method
+      if (m._method === 'get') {
+        q.__args = {};
+        if (m._filter === 'string') {
+          q.__args.id = m._filter;
+        } else {
+          q.__args = m._filter;
+        }
+        delete m._filter;
+      }
+
       // first
       if (m._first) {
         q = { __first: m._first, ...q };
