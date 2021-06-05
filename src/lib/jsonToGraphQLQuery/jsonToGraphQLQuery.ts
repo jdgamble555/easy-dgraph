@@ -33,13 +33,20 @@ function stringify(obj_from_json: any): string {
     return `{${props}}`;
 }
 
-// edit from original code to support no quotes on order argument
+/***
+ * edited from original code to support no quotes 
+ * on order argument and working filters
+ ***/
 function buildArgs(argsObj: any): string {
     const args = [];
     for (const argName in argsObj) {
-        let values = stringify(argsObj[argName])
+
+        let values = argName === 'filter'
+            ? JSON.stringify(argsObj[argName])
+            : stringify(argsObj[argName]);
+
         if (argName === 'order') {
-           values = values.split('"').join("");
+            values = values.split('"').join("");
         }
         args.push(`${argName}: ${values}`);
     }
