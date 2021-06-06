@@ -272,7 +272,7 @@ export class Dgraph {
 
       if (isUpdate || isAdd || isUpsert || isDelete) {
         if (q.__args) {
-          delete q.__args.__fitler;
+          delete q.__args;
         }
         q = Object.keys(q).length === 0 ? q : { [m._type]: q };
         q.numUids = 1;
