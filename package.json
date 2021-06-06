@@ -22,6 +22,7 @@
   },
   "homepage": "https://github.com/jdgamble555/easy-dgraph",
   "scripts": {
+    "pub": "run publish --access public",
     "build": "run-p build:*",
     "build:main": "tsc -p tsconfig.json",
     "build:module": "tsc -p tsconfig.module.json",
