@@ -22,6 +22,7 @@ export class Dgraph {
 
   _operation = 'query';
   private _operationSet = false;
+  private _isUpsert = false;
   private _methods: Method[] = [];
   private _method!: string;
   private _q!: any;
@@ -98,17 +99,18 @@ export class Dgraph {
     return this;
   }
 
-  add(q?: any, upsert = false): this {
+  add(q?: any): this {
     if (!this._operationSet) {
       this._operation = 'mutation';
     }
     this._q = q || {};
-    this._method = upsert ? 'upsert' : 'add';
+    this._method = 'add';
     return this;
   }
 
   upsert(q?: any): this {
-    return this.add(q, true);
+    this._isUpsert = true;
+    return this.add(q);
   }
 
   update(q?: any): this {
@@ -226,7 +228,6 @@ export class Dgraph {
     for (const m of this._methods) {
 
       const isUpdate = m._method === 'update';
-      const isUpsert = m._method === 'upsert';
       const isAdd = m._method === 'add';
       const isDelete = m._method === 'delete';
 
@@ -270,7 +271,7 @@ export class Dgraph {
         q = this.replace(q, r._find, r._replace);
       }
 
-      if (isUpdate || isAdd || isUpsert || isDelete) {
+      if (isUpdate || isAdd || isDelete) {
         if (q.__args) {
           delete q.__args;
         }
@@ -304,12 +305,12 @@ export class Dgraph {
       }
       // set
       if (m._set) {
-        if (isAdd || isUpsert) {
+        if (isAdd) {
           if (!q.__args) {
             q.__args = {};
           }
           q.__args.input = m._set;
-          if (isUpsert) {
+          if (this._isUpsert) {
             q.__args.upsert = true;
           }
         }
