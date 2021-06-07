@@ -2,15 +2,18 @@ import { jsonToGraphQLQuery } from './jsonToGraphQLQuery';
 
 interface Method {
   _type: string;
-  _method: string;
-  _q: any;
+  _method?: string;
+  _q?: any;
   _alias?: string;
   _filter?: any;
   _set?: any;
+  _remove?: any;
   _cascade?: any;
   _first?: number;
   _order?: any;
   _offset?: number;
+  _upsert?: boolean;
+  _idField?: string;
 };
 
 interface Replace {
@@ -21,33 +24,23 @@ interface Replace {
 export class Dgraph {
 
   _operation = 'query';
-  private _operationSet = false;
-  private _isUpsert = false;
   private _methods: Method[] = [];
-  private _method!: string;
-  private _q!: any;
-  private _cascade!: any;
-  private _type!: string;
-  private _alias!: string;
-  private _filter!: any;
-  private _set!: any;
-  private _opts: any;
-  private _first!: number;
-  private _order!: any;
-  private _offset!: number;
+  private _currentMethod: Method;
+  private _opts: any = {};
   private _search: Replace[] = [
     { _find: '__cascade', _replace: '__directives' },
     { _find: '__filter', _replace: '__args' },
     { _find: '__order', _replace: '__args' },
     { _find: '__offset', _replace: '__args' },
-    { _find: '__first', _replace: '__args' }
+    { _find: '__first', _replace: '__args' },
+    { _find: '__set', _replace: '__args' },
+    { _find: '__remove', _replace: '__args' }
   ];
 
-  constructor(type?: string) {
-    if (type) {
-      this._type = type;
+  constructor(_type?: string) {
+    if (_type) {
+      this.type(_type);
     }
-    this._opts = {};
   }
 
   toGQL(q: any) {
@@ -55,12 +48,16 @@ export class Dgraph {
   }
 
   type(type: string, alias?: string): this {
-    if (this._type) {
+    if (this._currentMethod) {
+      // add last method
       this.addMethod();
     }
-    this._type = type;
+    this._currentMethod = {
+      _type: type,
+      _idField: 'id'
+    };
     if (alias) {
-      this._alias = alias;
+      this._currentMethod._alias = alias;
     }
     return this;
   }
@@ -77,134 +74,133 @@ export class Dgraph {
 
   operation(op: string): this {
     this._operation = op;
-    this._operationSet = true;
+    return this;
+  }
+
+  idField(id: string): this {
+    this._currentMethod._idField = id;
     return this;
   }
 
   get(q: any): this {
-    this._q = q;
-    this._method = 'get';
+    this._currentMethod._q = q || {};
+    this._currentMethod._method = 'get';
     return this;
   }
 
   aggregate(q: any): this {
-    this._q = q;
-    this._method = 'aggregate';
+    this._currentMethod._q = q || {};
+    this._currentMethod._method = 'aggregate';
     return this;
   }
 
   query(q: any): this {
-    this._q = q;
-    this._method = 'query';
+    this._currentMethod._q = q || {};
+    this._currentMethod._method = 'query';
     return this;
   }
 
   add(q?: any): this {
-    if (!this._operationSet) {
-      this._operation = 'mutation';
-    }
-    this._q = q || {};
-    this._method = 'add';
+    this._operation = 'mutation';
+    this._currentMethod._q = q || {};
+    this._currentMethod._method = 'add';
     return this;
   }
 
   upsert(q?: any): this {
-    this._isUpsert = true;
+    this._currentMethod._upsert = true;
     return this.add(q);
   }
 
   update(q?: any): this {
-    if (!this._operationSet) {
-      this._operation = 'mutation';
-    }
-    this._q = q || {};
-    this._method = 'update';
+    this._operation = 'mutation';
+    this._currentMethod._q = q || {};
+    this._currentMethod._method = 'update';
     return this;
   }
 
   delete(q?: any): this {
-    if (!this._operationSet) {
-      this._operation = 'mutation';
-    }
-    this._q = q || {};
-    this._method = 'delete';
+    this._operation = 'mutation';
+    this._currentMethod._q = q || {};
+    this._currentMethod._method = 'delete';
     return this;
   }
 
   customQuery(q?: any): this {
-    this._q = q || {};
-    this._method = 'custom';
+    this._currentMethod._q = q || {};
+    this._currentMethod._method = 'custom';
     return this;
   }
 
   customMutation(q?: any): this {
-    if (!this._operationSet) {
-      this._operation = 'mutation';
-    }
-    this._q = q || {};
-    this._method = 'custom';
+    this._operation = 'mutation';
+    this._currentMethod._q = q || {};
+    this._currentMethod._method = 'custom';
     return this;
   }
 
   set(q: any): this {
-    this._set = q;
+    this._currentMethod._set = q;
+    return this;
+  }
+
+  remove(q: any): this {
+    this._currentMethod._remove = q;
     return this;
   }
 
   filter(q: any): this {
-    this._filter = q;
+    this._currentMethod._filter = q;
     return this;
   }
 
-  cascade(q: any): this {
-    this._cascade = q;
+  cascade(..._fields: any): this {
+    _fields = _fields.length
+      ? { fields: [].concat(_fields) }
+      : true;
+
+    this._currentMethod._cascade = _fields;
     return this;
   }
 
   first(n: number): this {
-    this._first = n;
+    this._currentMethod._first = n;
     return this;
   }
 
   order(q: any): this {
-    this._order = q;
+    this._currentMethod._order = q;
     return this;
   }
 
   offset(n: number): this {
-    this._offset = n;
+    this._currentMethod._offset = n;
     return this;
   }
 
   private addMethod() {
 
-    this._methods.push({
-      _method: this._method,
-      _q: this._q,
-      _type: this._type,
-      _alias: this._alias,
-      _filter: this._filter,
-      _cascade: this._cascade,
-      _set: this._set,
-      _first: this._first,
-      _order: this._order,
-      _offset: this._offset
-    });
-    this._type = '';
-    this._alias = '';
-    this._filter = undefined;
-    this._set = undefined;
-    this._cascade = undefined;
-    this._first = undefined;
-    this._order = undefined;
-    this._offset = undefined;
+    // add method to be created, reset
+    this._methods.push(this._currentMethod);
+    this._currentMethod = undefined;
   }
 
   private replace(obj: any, find: string, replace: string) {
+
+    // replace methods with argument or directive in code
     for (const i in obj) {
       if (i === find) {
-        const value = obj[i];
+
+        let value = obj[i];
         const newKey = find.substring(2);
+
+        // cascade fix
+        if (find === '__cascade' && Array.isArray(value)) {
+          value = value.length
+            ? { fields: [].concat(value) }
+            : true;
+        }
+
         delete obj[i];
         obj[replace] = { [newKey]: value, ...obj[replace] };
       } else if (typeof obj[i] === 'object') {
@@ -219,108 +215,127 @@ export class Dgraph {
       + type.substr(1).toLowerCase();
   }
 
+  private addShortcuts(q: any, m: Method): any {
+
+    // add shortcuts from methods to code
+    for (const s of this._search) {
+      const key = s._find;
+      const methodKey = key.substring(1);
+      if (m?.[methodKey]) {
+        q = { [key]: m[methodKey], ...q };
+      }
+    }
+    return q;
+  }
+
+  private autoId(m: Method) {
+
+    // allow just ids to be added
+    if (m._filter) {
+      if (typeof m._filter === 'string' || Array.isArray(m._filter)) {
+        m._filter = {
+          [m._idField]: m._filter
+        }
+      }
+    }
+    return m;
+  }
+
   build(): any {
 
+    // add last method
     this.addMethod();
 
     const obj: any = {};
 
-    for (const m of this._methods) {
+    for (let m of this._methods) {
 
-      const isUpdate = m._method === 'update';
-      const isAdd = m._method === 'add';
-      const isDelete = m._method === 'delete';
+      // simplify ids
+      m = this.autoId(m);
 
-      let q: any = m._q;
+      // add shortcuts
+      let q: any = this.addShortcuts(m._q, m);
 
-      // get method
-      if (m._method === 'get') {
-        if (!q.__args) {
-          q.__args = {};
-        }
-        if (typeof m._filter === 'string') {
-          q.__args.id = m._filter;
-        } else {
-          q.__args = m._filter;
-        }
-        delete m._filter;
-      }
-
-      // first
-      if (m._first) {
-        q = { __first: m._first, ...q };
-      }
-
-      // order
-      if (m._order) {
-        q = { __order: m._order, ...q };
-      }
-
-      // offset
-      if (m._offset) {
-        q = { __offset: m._offset, ...q };
-      }
-
-      // cascade
-      if (m._cascade) {
-        q = { __cascade: m._cascade, ...q };
-      }
-
-      // shortcuts replace
+      // replace all shortcuts
       for (const r of this._search) {
         q = this.replace(q, r._find, r._replace);
       }
 
-      if (isUpdate || isAdd || isDelete) {
-        if (q.__args) {
-          delete q.__args;
-        }
-        q = Object.keys(q).length === 0 ? q : { [m._type]: q };
-        q.numUids = 1;
-      }
-      if (isDelete) {
-        q.msg = 1;
-      }
-
-      let key = m._method + this.titleType(m._type);
+      const isUpdate = m._method === 'update';
+      const isAdd = m._method === 'add';
+      const isGet = m._method === 'get';
+      const isDelete = m._method === 'delete';
 
       const patch: any = {};
+
+      // filter
+      if (q.__args?.filter) {
+
+        // Get - Add - Update
+        if (isGet) {
+          q.__args = q.__args.filter;
+          delete q.__args.filter;
+        }
+        if (isUpdate) {
+          patch.filter = q.__args.filter;
+          delete q.__args.filter;
+        }
+      }
+
+      // set
+      if (q.__args?.set) {
+
+        // Add - Update
+        if (isAdd) {
+          q.__args.input = q.__args.set;
+          if (m._upsert) {
+            q.__args.upsert = true;
+          }
+        }
+        if (isUpdate) {
+          patch.set = q.__args.set;
+        }
+        delete q.__args.set;
+      }
+
+      // remove
+      if (q.__args?.remove) {
+        patch.remove = q.__args.remove;
+        delete q.__args.remove;
+      }
+
+      // patch
+      if (isUpdate) {
+        q = { ...q };
+        q.__args = {};
+        q.__args.input = patch;
+      }
+
+      if (isUpdate || isAdd || isDelete) {
+
+        // set up return type
+        for (const v of Object.keys(q)) {
+          if (!v.startsWith('__')) {
+            const key = v;
+            delete q[key];
+            q[m._type] = {};
+            q[m._type][key] = 1;
+          }
+        }
+        q.numUids = 1;
+
+        if (isDelete) {
+          q.msg = 1;
+        }
+      }
+
+      // type
+      let key = m._method + this.titleType(m._type);
 
       // alias
       if (m._alias) {
         key = m._alias;
         q.__aliasFor = m._method + this.titleType(m._type);
-      }
-      // filter
-      if (m._filter) {
-        if (typeof m._filter === 'string' || Array.isArray(m._filter)) {
-          m._filter = { id: m._filter };
-        }
-        if (isUpdate) {
-          patch.filter = m._filter;
-        } else {
-          q.__args = {};
-          q.__args.filter = m._filter;
-        }
-      }
-      // set
-      if (m._set) {
-        if (isAdd) {
-          if (!q.__args) {
-            q.__args = {};
-          }
-          q.__args.input = m._set;
-          if (this._isUpsert) {
-            q.__args.upsert = true;
-          }
-        }
-        if (isUpdate) {
-          patch.set = m._set;
-          if (!q.__args) {
-            q.__args = {};
-          }
-          q.__args.input = patch;
-        }
       }
       obj[key] = q;
     }

@@ -27,10 +27,9 @@ function stringify(obj_from_json: any): string {
     // but without quotes around the keys.
     const props: string = Object
         .keys(obj_from_json)
-        .map((key) => `${key}: ${stringify(obj_from_json[key])}`)
-        .join(', ');
+        .map((key) => `${key}: ${stringify(obj_from_json[key])}`).join(', ');
 
-    return `{${props}}`;
+    return `{ ${props} }`;
 }
 
 /***
@@ -40,7 +39,7 @@ function buildArgs(argsObj: any): string {
     const args = [];
     for (const argName in argsObj) {
 
-        let values = stringify(argsObj[argName]);
+        let values = stringify(argsObj[argName])
 
         if (argName === 'order') {
             values = values.split('"').join("");
@@ -61,19 +60,19 @@ function buildVariables(varsObj: any): string {
 function buildDirectives(dirsObj: any): string {
     const directiveName = Object.keys(dirsObj)[0];
     const directiveValue = dirsObj[directiveName];
-    if (typeof directiveValue === 'boolean') {
+    if (typeof directiveValue === 'boolean' || typeof directiveValue === 'number') {
         return directiveName;
     }
     else if (typeof directiveValue === 'object') {
         const args = [];
         for (const argName in directiveValue) {
-            const argVal = stringify(directiveValue[argName]).replace(/"/g, '');
+            const argVal = stringify(directiveValue[argName]);
             args.push(`${argName}: ${argVal}`);
         }
         return `${directiveName}(${args.join(', ')})`;
     }
     else {
-        throw new Error(`Unsupported type for directive: ${typeof directiveValue}. Types allowed: object, boolean.\n` +
+        throw new Error(`Unsupported type for directive: ${typeof directiveValue}. Types allowed: object, boolean, number.\n` +
             `Offending object: ${JSON.stringify(dirsObj)}`);
     }
 }
@@ -135,7 +134,7 @@ function convertQuery(node: any, level: number, output: [string, number][], opti
                         argsStr = `(${buildArgs(value.__args)})`;
                     }
                     const spacer = directivesExist && argsExist ? ' ' : '';
-                    token = `${token} ${dirsStr}${spacer}${argsStr}`;
+                    token = `${token} ${argsStr}${spacer}${dirsStr}`;
                 }
 
                 output.push([token + (subFields || partialFragmentsExist || fullFragmentsExist ? ' {' : ''), level]);

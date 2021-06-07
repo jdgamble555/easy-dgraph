@@ -35,11 +35,7 @@
     "lib": [
       "es2017"
     ],
-    "types": [],
-    "typeRoots": [
-      "node_modules/@types",
-      "src/types"
-    ]
+    "types": ["jest"],
   },
   "include": [
     "src/**/*.ts"
