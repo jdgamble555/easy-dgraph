@@ -27,7 +27,18 @@ function stringify(obj_from_json: any): string {
     // but without quotes around the keys.
     const props: string = Object
         .keys(obj_from_json)
-        .map((key) => `${key}: ${stringify(obj_from_json[key])}`).join(', ');
+        .map((key) => {
+            
+            // add has fix
+            if (key === 'has') {
+                const has = obj_from_json[key];
+                return Array.isArray(has)
+                    ? `${key}: [${has.join(', ')}]`
+                    : `${key}: ${has}`;
+            }
+            return `${key}: ${stringify(obj_from_json[key])}`
+
+        }).join(', ');
 
     return `{ ${props} }`;
 }

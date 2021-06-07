@@ -192,10 +192,12 @@ export class Dgraph {
       if (i === find) {
 
         let value = obj[i];
+
+        const isString = Array.isArray(value) || typeof value === 'string';
         const newKey = find.substring(2);
 
         // cascade fix
-        if (find === '__cascade' && Array.isArray(value)) {
+        if (find === '__cascade' && isString) {
           value = value.length
             ? { fields: [].concat(value) }
             : true;
@@ -265,6 +267,7 @@ export class Dgraph {
       const isAdd = m._method === 'add';
       const isGet = m._method === 'get';
       const isDelete = m._method === 'delete';
+      const isCustom = m._method === 'custom';
 
       const patch: any = {};
 
@@ -272,7 +275,7 @@ export class Dgraph {
       if (q.__args?.filter) {
 
         // Get - Add - Update
-        if (isGet) {
+        if (isGet || isCustom) {
           q.__args = q.__args.filter;
           delete q.__args.filter;
         }
@@ -329,8 +332,10 @@ export class Dgraph {
         }
       }
 
-      // type
-      let key = m._method + this.titleType(m._type);
+      // type - function
+      let key = isCustom
+        ? m._type :
+        m._method + this.titleType(m._type);
 
       // alias
       if (m._alias) {
@@ -348,54 +353,6 @@ export class Dgraph {
   buildSubscription(): any {
     this.operation('subscription');
     return this.build();
-  }
-
-}
-
-// class to save and edit optimistic data
-export class optimistic {
-
-  private _data: any[] = [];
-
-  constructor() { }
-
-  set data(d: any) {
-    this._data = d;
-  }
-
-  get data() {
-    return this._data;
-  }
-
-  add(record: any, idName = 'id', addId = true) {
-    if (idName && addId) {
-      record = { [idName]: this.randString(), ...record };
-    }
-    this._data = [...this._data, record];
-    return this;
-  }
-
-  delete(id: string, idName = 'id') {
-    this._data = this._data.filter((r: any) => r[idName] !== id);
-    return this;
-  }
-
-  update(id: string, record: any, idName = 'id') {
-    // toggle completed task optimistically
-    this._data = this._data.map((r: any) => {
-      if (r[idName] === id) {
-        for (const k of Object.keys(record)) {
-          r[k] = record[k];
-        }
-      }
-      return r;
-    });
-    return this;
-  }
-
-  private randString(): string {
-    // generate random string
-    return Math.random().toString(36).substr(2, 5);
   }
 
 }
