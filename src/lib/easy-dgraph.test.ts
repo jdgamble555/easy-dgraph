@@ -320,26 +320,26 @@ describe('easy-dgraph Functions', () => {
 
     // Deep Mutations
     it('Update Deep Mutation', () => {
-        const d = new Dgraph('lesson').deep('eric').update({
+        const d = new Dgraph('lesson').deep({ field: 'cards', type: 'card' }).update({
             me: 1,
-            eric: {
+            cards: {
                 tommy: 1
             }
-        }).filter({ id: '12345' }).set({ me: false, eric: { tommy: 'son' } }).build();
-        expect(d).toBe(`mutation { addEric(input: { tommy: "son" }, upsert: true) { numUids } updateLesson(input: { filter: { id: "12345" }, set: { me: false } }) { lesson { me eric { tommy } } numUids } }`);
+        }).filter({ id: '12345' }).set({ me: false, cards: { tommy: 'son' } }).build();
+        expect(d).toBe(`mutation { addCard(input: { tommy: "son" }, upsert: true) { numUids } updateLesson(input: { filter: { id: "12345" }, set: { me: false } }) { lesson { me cards { tommy } } numUids } }`);
     });
 
     it('Update 2 Deep Mutation', () => {
-        const d = new Dgraph('lesson').deep('eric', 'tim').update({
+        const d = new Dgraph('lesson').deep([{ field: 'cards', type: 'card' }, { field: 'pods', type: 'pod' }]).update({
             me: 1,
-            eric: {
+            cards: {
                 tommy: 1
             },
-            tim: {
-                frank: 1
+            pods: {
+                free: 1
             }
-        }).filter({ id: '12345' }).set({ me: false, eric: { tommy: 'son' }, tim: { tool: false } }).build();
-        expect(d).toBe(`mutation { addEric(input: { tommy: "son" }, upsert: true) { numUids } addTim(input: { tool: false }, upsert: true) { numUids } updateLesson(input: { filter: { id: "12345" }, set: { me: false } }) { lesson { me eric { tommy } tim { frank } } numUids } }`);
+        }).filter({ id: '12345' }).set({ me: false, cards: { tommy: 'son' }, pods: { f: 0 } }).build();
+        expect(d).toBe(`mutation { addCard(input: { tommy: "son" }, upsert: true) { numUids } addPod(input: { f: 0 }, upsert: true) { numUids } updateLesson(input: { filter: { id: "12345" }, set: { me: false } }) { lesson { me cards { tommy } pods { free } } numUids } }`);
     });
 
 });

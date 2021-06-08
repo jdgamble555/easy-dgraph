@@ -1,5 +1,14 @@
 import { jsonToGraphQLQuery } from './jsonToGraphQLQuery';
 
+interface Replace {
+  _find: string;
+  _replace: string;
+}
+
+interface Deep {
+  field: string;
+  type: string;
+}
 interface Method {
   _type: string;
   _method?: string;
@@ -11,16 +20,11 @@ interface Method {
   _cascade?: any;
   _first?: number;
   _order?: any;
-  _deep?: any;
+  _deep?: Deep[];
   _offset?: number;
   _upsert?: boolean;
   _idField?: string;
 };
-
-interface Replace {
-  _find: string;
-  _replace: string;
-}
 
 export class Dgraph {
 
@@ -73,13 +77,8 @@ export class Dgraph {
     return this;
   }
 
-  deep(..._fields: any): this {
-    if (Array.isArray(_fields[0])) {
-      _fields = _fields[0];
-    }
-    if (_fields.length) {
-      this._currentMethod._deep = _fields;
-    }
+  deep(data: Deep | Deep[]): this {
+    this._currentMethod._deep = [].concat(data);
     return this;
   }
 
@@ -194,19 +193,37 @@ export class Dgraph {
 
   private addMethod() {
 
-    // todo - add support for set arrays
-
     // deep mutations
     if (this._currentMethod._deep) {
-      for (const field of this._currentMethod._deep) {
+
+      for (const d of this._currentMethod._deep) {
+
+        // set array
+        let sets = [];
+        let newSets = [];
+        if (!Array.isArray(this._currentMethod._set)) {
+          sets = [].concat(this._currentMethod._set);
+        } else {
+          sets = this._currentMethod._set;
+        }
+        for (const i in sets) {
+          if (sets[i][d.field]) {
+            newSets.push(sets[i][d.field]);
+            delete sets[i][d.field];
+          }
+        }
+        if (sets.length === 1) {
+          sets = sets[0];
+          newSets = newSets[0];
+        }
+        this._currentMethod._set = sets;
         const m: Method = {
-          _type: field,
+          _type: d.type,
           _method: 'add',
           _upsert: true,
           _q: {},
-          _set: this._currentMethod._set[field]
+          _set: newSets
         };
-        delete this._currentMethod._set[field];
         this._methods.push(m);
       }
     }
