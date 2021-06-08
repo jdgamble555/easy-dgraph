@@ -8,6 +8,8 @@ interface Replace {
 interface Deep {
   field: string;
   type: string;
+  idField?: string;
+  idType?: boolean;
 }
 interface Method {
   _type: string;
@@ -201,6 +203,7 @@ export class Dgraph {
         // set array
         let sets = [];
         let newSets = [];
+        let ids = [];
         if (!Array.isArray(this._currentMethod._set)) {
           sets = [].concat(this._currentMethod._set);
         } else {
@@ -208,6 +211,10 @@ export class Dgraph {
         }
         for (const i in sets) {
           if (sets[i][d.field]) {
+            d.idField = d.idField ? d.idField : 'id';
+            // copy over data
+            ids.push(sets[i][d.field][d.idField]);
+            delete sets[i][d.field][d.idField];
             newSets.push(sets[i][d.field]);
             delete sets[i][d.field];
           }
@@ -215,13 +222,14 @@ export class Dgraph {
         if (sets.length === 1) {
           sets = sets[0];
           newSets = newSets[0];
+          ids = ids[0];
         }
         this._currentMethod._set = sets;
         const m: Method = {
           _type: d.type,
-          _method: 'add',
-          _upsert: true,
+          _method: 'update',
           _q: {},
+          _filter: { [d.idField]: ids }, 
           _set: newSets
         };
         this._methods.push(m);
