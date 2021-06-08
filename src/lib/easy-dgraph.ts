@@ -201,36 +201,32 @@ export class Dgraph {
       for (const d of this._currentMethod._deep) {
 
         // set array
-        let sets = [];
-        let newSets = [];
         let ids = [];
-        if (!Array.isArray(this._currentMethod._set)) {
-          sets = [].concat(this._currentMethod._set);
-        } else {
-          sets = this._currentMethod._set;
-        }
-        const id = d.idField ? d.idField : 'id'
+
+        let sets = this._currentMethod._set[d.field];
+        sets = Array.isArray(sets)
+          ? sets
+          : [].concat(sets);
+
+        const id = d.idField ? d.idField : 'id';
         for (const i in sets) {
-          if (sets[i][d.field]) {
-            // copy over data
-            ids.push(sets[i][d.field][id]);
-            delete sets[i][d.field][id];
-            newSets.push(sets[i][d.field]);
-            delete sets[i][d.field];
+          if (sets[i][id]) {
+            // copy over ids
+            ids.push(sets[i][id]);
+            delete sets[i][id];
           }
         }
         if (sets.length === 1) {
           sets = sets[0];
-          newSets = newSets[0];
           ids = ids[0];
         }
-        this._currentMethod._set = sets;
+        delete this._currentMethod._set[d.field];
         const m: Method = {
           _type: d.type,
           _method: 'update',
           _q: {},
           _filter: { [id]: ids },
-          _set: newSets
+          _set: sets
         };
         this._methods.push(m);
       }
