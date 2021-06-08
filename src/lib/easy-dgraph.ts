@@ -203,6 +203,7 @@ export class Dgraph {
           _type: field,
           _method: 'add',
           _upsert: true,
+          _q: {},
           _set: this._currentMethod._set[field]
         };
         delete this._currentMethod._set[field];
