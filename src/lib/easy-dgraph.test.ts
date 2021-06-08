@@ -265,9 +265,12 @@ describe('Mutation Tests', () => {
     // UPDATE
     it('Update Mutation Set', () => {
         const d = new Dgraph('lesson').update({
-            me: 1
+            me: 1,
+            cards: {
+                buddy: 1
+            }
         }).filter({ bob: true }).set({ tim: false }).build();
-        expect(d).toBe(`mutation { updateLesson(input: { filter: { bob: true }, set: { tim: false } }) { lesson { me } numUids } }`);
+        expect(d).toBe(`mutation { updateLesson(input: { filter: { bob: true }, set: { tim: false } }) { lesson { me cards { buddy } } numUids } }`);
     });
 
     it('Update Mutation Remove', () => {

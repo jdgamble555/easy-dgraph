@@ -315,14 +315,16 @@ export class Dgraph {
       }
 
       if (isUpdate || isAdd || isDelete) {
-
+        
         // set up return type
-        for (const v of Object.keys(q)) {
-          if (!v.startsWith('__')) {
-            const key = v;
+        for (const key of Object.keys(q)) {
+          if (!key.startsWith('__')) {
+            const v = q[key];
             delete q[key];
-            q[m._type] = {};
-            q[m._type][key] = 1;
+            if (!q[m._type]) {
+              q[m._type] = {};
+            }
+            q[m._type][key] = v;
           }
         }
         q.numUids = 1;
