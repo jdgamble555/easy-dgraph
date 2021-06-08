@@ -209,12 +209,12 @@ export class Dgraph {
         } else {
           sets = this._currentMethod._set;
         }
+        const id = d.idField ? d.idField : 'id'
         for (const i in sets) {
           if (sets[i][d.field]) {
-            d.idField = d.idField ? d.idField : 'id';
             // copy over data
-            ids.push(sets[i][d.field][d.idField]);
-            delete sets[i][d.field][d.idField];
+            ids.push(sets[i][d.field][id]);
+            delete sets[i][d.field][id];
             newSets.push(sets[i][d.field]);
             delete sets[i][d.field];
           }
@@ -229,7 +229,7 @@ export class Dgraph {
           _type: d.type,
           _method: 'update',
           _q: {},
-          _filter: { [d.idField]: ids }, 
+          _filter: { [id]: ids },
           _set: newSets
         };
         this._methods.push(m);

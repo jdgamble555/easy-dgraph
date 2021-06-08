@@ -326,11 +326,11 @@ describe('easy-dgraph Functions', () => {
                 id: 1,
                 tommy: 1
             }
-        }).filter({ id: '12345' }).set({ me: false, cards: { id: '1', tommy: 'son' } }).build();
-        expect(d).toBe(`mutation { updateCard(input: { filter: { id: "1" }, set: { tommy: "son" } }) { numUids } updateLesson(input: { filter: { id: "12345" }, set: { me: false } }) { lesson { me cards { id tommy } } numUids } }`);
+        }).filter({ id: '12345' }).set([{ me: false, cards: { id: '1', tommy: 'son' } }, { me: false, cards: { id: '2', tommy: 'son' } }]).build();
+        expect(d).toBe(`mutation { updateCard(input: { filter: { id: ["1", "2"] }, set: [{ tommy: "son" }, { tommy: "son" }] }) { numUids } updateLesson(input: { filter: { id: "12345" }, set: [{ me: false }, { me: false }] }) { lesson { me cards { id tommy } } numUids } }`);
     });
 
-    /*it('Update 2 Deep Mutation', () => {
+    it('Update 2 Deep Mutation', () => {
         const d = new Dgraph('lesson').deep([{ field: 'cards', type: 'card' }, { field: 'pods', type: 'pod' }]).update({
             me: 1,
             cards: {
@@ -339,8 +339,14 @@ describe('easy-dgraph Functions', () => {
             pods: {
                 free: 1
             }
-        }).filter({ id: '12345' }).set({ me: false, cards: { tommy: 'son' }, pods: { f: 0 } }).build();
-        expect(d).toBe(`mutation { addCard(input: { tommy: "son" }, upsert: true) { numUids } addPod(input: { f: 0 }, upsert: true) { numUids } updateLesson(input: { filter: { id: "12345" }, set: { me: false } }) { lesson { me cards { tommy } pods { free } } numUids } }`);
-    });*/
+        }).filter({ id: '12345' }).set({ me: false, cards: { id: '1', tommy: 'son' }, pods: { id: '22', f: 0 } }).build();
+        expect(d).toBe(`mutation { updateCard(input: { filter: { id: "1" }, set: { tommy: "son" } }) { numUids } updatePod(input: { filter: { id: "22" }, set: { f: 0 } }) { numUids } updateLesson(input: { filter: { id: "12345" }, set: { me: false } }) { lesson { me cards { tommy } pods { free } } numUids } }`);
+    });
+
+
+
+
+
+
 
 });
