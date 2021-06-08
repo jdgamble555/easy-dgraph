@@ -11,6 +11,7 @@ interface Method {
   _cascade?: any;
   _first?: number;
   _order?: any;
+  _deep?: any;
   _offset?: number;
   _upsert?: boolean;
   _idField?: string;
@@ -69,6 +70,16 @@ export class Dgraph {
 
   pretty(): this {
     this._opts.pretty = true;
+    return this;
+  }
+
+  deep(..._fields: any): this {
+    if (Array.isArray(_fields[0])) {
+      _fields = _fields[0];
+    }
+    if (_fields.length) {
+      this._currentMethod._deep = _fields;
+    }
     return this;
   }
 
@@ -155,6 +166,9 @@ export class Dgraph {
   }
 
   cascade(..._fields: any): this {
+    if (Array.isArray(_fields[0])) {
+      _fields = _fields[0];
+    }
     _fields = _fields.length
       ? { fields: [].concat(_fields) }
       : true;
@@ -180,6 +194,21 @@ export class Dgraph {
 
   private addMethod() {
 
+    // todo - add support for set arrays
+
+    // deep mutations
+    if (this._currentMethod._deep) {
+      for (const field of this._currentMethod._deep) {
+        const m: Method = {
+          _type: field,
+          _method: 'add',
+          _upsert: true,
+          _set: this._currentMethod._set[field]
+        };
+        delete this._currentMethod._set[field];
+        this._methods.push(m);
+      }
+    }
     // add method to be created, reset
     this._methods.push(this._currentMethod);
     this._currentMethod = undefined;
@@ -315,7 +344,7 @@ export class Dgraph {
       }
 
       if (isUpdate || isAdd || isDelete) {
-        
+
         // set up return type
         for (const key of Object.keys(q)) {
           if (!key.startsWith('__')) {

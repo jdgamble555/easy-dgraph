@@ -116,6 +116,13 @@ describe('Query Tests', () => {
         expect(d).toBe(`query { queryTask(first: 5, offset: 2) @cascade(fields: ["name", "me"]) { tom } }`);
     });
 
+    it('Cascade Pagination with Fields Array', () => {
+        const d = new Dgraph('task').query({
+            tom: 1
+        }).cascade(['name', 'me']).first(5).offset(2).build();
+        expect(d).toBe(`query { queryTask(first: 5, offset: 2) @cascade(fields: ["name", "me"]) { tom } }`);
+    });
+
     it('Nested Cascade Pagination', () => {
         const d = new Dgraph('task').query({
             tom: {
@@ -305,6 +312,34 @@ describe('Custom Tests', () => {
     it('Custom Mutation', () => {
         const d = new Dgraph('newCustomTwitterUser').customMutation().filter({ name: '222g', bug: 'spider' }).build();
         expect(d).toBe(`mutation { newCustomTwitterUser(name: "222g", bug: "spider") }`);
+    });
+
+});
+
+describe('easy-dgraph Functions', () => {
+
+    // Deep Mutations
+    it('Update Deep Mutation', () => {
+        const d = new Dgraph('lesson').deep('eric').update({
+            me: 1,
+            eric: {
+                tommy: 1
+            }
+        }).filter({ id: '12345' }).set({ me: false, eric: { tommy: 'son' } }).build();
+        expect(d).toBe(`mutation { addEric(input: { tommy: "son" }, upsert: true) { numUids } updateLesson(input: { filter: { id: "12345" }, set: { me: false } }) { lesson { me eric { tommy } } numUids } }`);
+    });
+
+    it('Update 2 Deep Mutation', () => {
+        const d = new Dgraph('lesson').deep('eric', 'tim').update({
+            me: 1,
+            eric: {
+                tommy: 1
+            },
+            tim: {
+                frank: 1
+            }
+        }).filter({ id: '12345' }).set({ me: false, eric: { tommy: 'son' }, tim: { tool: false } }).build();
+        expect(d).toBe(`mutation { addEric(input: { tommy: "son" }, upsert: true) { numUids } addTim(input: { tool: false }, upsert: true) { numUids } updateLesson(input: { filter: { id: "12345" }, set: { me: false } }) { lesson { me eric { tommy } tim { frank } } numUids } }`);
     });
 
 });
