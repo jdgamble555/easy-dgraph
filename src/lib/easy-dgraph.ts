@@ -213,9 +213,10 @@ export class Dgraph {
         for (const i in sets) {
           if (sets[i][d.field]) {
             // copy over data
-            ids.push(sets[i][d.field][id]);
+            const s = sets[i][d.field]
+            ids.push(s.id);
             delete sets[i][d.field][id];
-            newSets.push(sets[i][d.field]);
+            newSets.push(s);
             delete sets[i][d.field];
           }
         }
