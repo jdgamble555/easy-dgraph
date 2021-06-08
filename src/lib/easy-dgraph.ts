@@ -301,9 +301,9 @@ export class Dgraph {
       const patch: any = {};
 
       // filter
-      if (q.__args?.filter) {
+      if (q?.__args?.filter) {
 
-        // Get - Add - Update
+        // Get - Custom - Update
         if (isGet || isCustom) {
           q.__args = q.__args.filter;
           delete q.__args.filter;
@@ -315,7 +315,7 @@ export class Dgraph {
       }
 
       // set
-      if (q.__args?.set) {
+      if (q?.__args?.set) {
 
         // Add - Update
         if (isAdd) {
@@ -331,7 +331,7 @@ export class Dgraph {
       }
 
       // remove
-      if (q.__args?.remove) {
+      if (q?.__args?.remove) {
         patch.remove = q.__args.remove;
         delete q.__args.remove;
       }
