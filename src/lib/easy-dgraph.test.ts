@@ -330,4 +330,28 @@ describe('easy-dgraph Functions', () => {
         expect(d).toBe(`mutation { updateCard0: updateCard(input: { filter: { id: "1" }, set: { tommy: "son" } }) { numUids } updateCard1: updateCard(input: { filter: { id: "2" }, set: { tommy: "bill" } }) { numUids } updateLesson(input: { filter: { id: "12345" }, set: { me: false } }) { lesson { me cards { id tommy } } numUids } }`);
     });
 
+    it('Update Multiple Deep Mutation with Multiple Records', () => {
+        const d = new Dgraph('lesson').deep([{ field: 'cards', type: 'card' }, { field: 'pages', type: 'page', idField: 'pageId', idDirective: true }]).update({
+            me: 1,
+            cards: {
+                id: 1,
+                tommy: 1
+            },
+            pages: {
+                pageId: 1,
+                words: 1
+            }
+        }).filter({ id: '12345' }).set({ me: false, cards: [{ id: '1', tommy: 'son' }, { id: '2', tommy: 'bill' }], pages: { pageId: 1, words: '23' } }).build();
+        expect(d).toBe(`mutation { updateCard0: updateCard(input: { filter: { id: "1" }, set: { tommy: "son" } }) { numUids } updateCard1: updateCard(input: { filter: { id: "2" }, set: { tommy: "bill" } }) { numUids } updatePage0: updatePage(input: { filter: { pageId: { eq: 1 } }, set: { words: "23" } }) { numUids } updateLesson(input: { filter: { id: "12345" }, set: { me: false } }) { lesson { me cards { id tommy } pages { pageId words } } numUids } }`);
+    });
+
+    // TODO
+    it.todo(`Nested Deletes..., will need some kind of chaining to search for belonging fields..., can't be done in package alone`);
+
+    it.todo(`Update Multiple Sets... have to figure out ID in Filter vs Regular Filter..., use .idField({ field: 'task', idDirective: true })`);
+
+    it.todo('Nested Filters, could get complex with searching..., worth package size increase?');
+
+    it.todo(`Deep Deep Updates?... deep({ field: 'cards.lesson' })`);
+
 });

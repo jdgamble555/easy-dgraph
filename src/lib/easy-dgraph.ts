@@ -10,6 +10,7 @@ interface Deep {
   type: string;
   idField?: string;
   idType?: boolean;
+  idDirective?: boolean;
 }
 interface Method {
   _type: string;
@@ -80,7 +81,9 @@ export class Dgraph {
   }
 
   deep(data: Deep | Deep[]): this {
-    this._currentMethod._deep = [].concat(data);
+    this._currentMethod._deep = Array.isArray(data)
+      ? data
+      : [].concat(data);
     return this;
   }
 
@@ -195,42 +198,52 @@ export class Dgraph {
 
   private addMethod() {
 
+    const current = this._currentMethod;
+    const deep = current._deep;
+    const set = current._set;
+
     // deep mutations
-    if (this._currentMethod._deep) {
+    if (deep) {
 
-      for (const d of this._currentMethod._deep) {
+      for (const d of deep) {
 
-        let sets = this._currentMethod._set[d.field];
-        sets = Array.isArray(sets)
-          ? sets
-          : [].concat(sets);
+        let subsets = set[d.field];
+        subsets = Array.isArray(subsets)
+          ? subsets
+          : [].concat(subsets);
 
         const id = d.idField ? d.idField : 'id';
-        for (const i in sets) {
-          if (sets[i][id]) {
+        for (const i in subsets) {
+          if (subsets[i][id]) {
 
             // get id, remove it
-            const newId = sets[i][id];
-            delete sets[i][id];
+            const newId = subsets[i][id];
+            delete subsets[i][id];
+
+            // @id or ID
+            const filter = d.idDirective
+              ? { [id]: { eq: newId } }
+              : { [id]: newId };
 
             // create new method for each node
             const m: Method = {
               _type: d.type,
               _method: 'update',
               _q: {},
-              _filter: { [id]: newId },
-              _set: sets[i],
+              _filter: filter,
+              _set: subsets[i],
               _alias: 'update' + this.titleType(d.type) + i
             };
             this._methods.push(m);
-
           }
         }
-        delete this._currentMethod._set[d.field];
+        delete set[d.field];
       }
     }
+
     // add method to be created, reset
-    this._methods.push(this._currentMethod);
+    this.set(set);
+    this._methods.push(current);
     this._currentMethod = undefined;
   }
 
@@ -261,9 +274,9 @@ export class Dgraph {
     return obj;
   }
 
-  private titleType(type: string): string {
-    return type.charAt(0).toUpperCase()
-      + type.substr(1).toLowerCase();
+  private titleType(t: string): string {
+    return t.charAt(0).toUpperCase()
+      + t.substr(1).toLowerCase();
   }
 
   private addShortcuts(q: any, m: Method): any {
