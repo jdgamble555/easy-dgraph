@@ -209,17 +209,21 @@ export class Dgraph {
         for (const i in sets) {
           if (sets[i][id]) {
 
+            // get id, remove it
+            const newId = sets[i][id];
+            delete sets[i][id];
+
             // create new method for each node
             const m: Method = {
               _type: d.type,
               _method: 'update',
               _q: {},
-              _filter: { [id]: sets[i][id] },
-              _set: sets,
+              _filter: { [id]: newId },
+              _set: sets[i],
               _alias: 'update' + this.titleType(d.type) + i
             };
             this._methods.push(m);
-            delete sets[i][id];
+
           }
         }
         delete this._currentMethod._set[d.field];

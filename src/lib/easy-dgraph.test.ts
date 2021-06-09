@@ -327,7 +327,7 @@ describe('easy-dgraph Functions', () => {
                 tommy: 1
             }
         }).filter({ id: '12345' }).set({ me: false, cards: [{ id: '1', tommy: 'son' }, { id: '2', tommy: 'bill' }] }).build();
-        expect(d).toBe(`mutation { update-card0: updateCard(input: { filter: { id: "1" }, set: [{ tommy: "son" }, { tommy: "bill" }] }) { numUids } update-card1: updateCard(input: { filter: { id: "2" }, set: [{ tommy: "son" }, { tommy: "bill" }] }) { numUids } updateLesson(input: { filter: { id: "12345" }, set: { me: false } }) { lesson { me cards { id tommy } } numUids } }`);
+        expect(d).toBe(`mutation { updateCard0: updateCard(input: { filter: { id: "1" }, set: { tommy: "son" } }) { numUids } updateCard1: updateCard(input: { filter: { id: "2" }, set: { tommy: "bill" } }) { numUids } updateLesson(input: { filter: { id: "12345" }, set: { me: false } }) { lesson { me cards { id tommy } } numUids } }`);
     });
 
 });
