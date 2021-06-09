@@ -330,6 +330,17 @@ describe('easy-dgraph Functions', () => {
         expect(d).toBe(`mutation { updateCard0: updateCard(input: { filter: { id: "1" }, set: { tommy: "son" } }) { numUids } updateCard1: updateCard(input: { filter: { id: "2" }, set: { tommy: "bill" } }) { numUids } updateLesson(input: { filter: { id: "12345" }, set: { me: false } }) { lesson { me cards { id tommy } } numUids } }`);
     });
 
+    it('Update Deep Mutation with Multiple Records @id Type', () => {
+        const d = new Dgraph('lesson').deep({ field: 'cards', type: 'card', idDirective: true, idField: 'nest' }).update({
+            me: 1,
+            cards: {
+                nest: 1,
+                tommy: 1
+            }
+        }).filter({ id: '12345' }).set({ me: false, cards: [{ nest: '1', tommy: 'son' }, { nest: '2', tommy: 'bill' }] }).build();
+        expect(d).toBe(`mutation { updateCard0: updateCard(input: { filter: { nest: { eq: "1" } }, set: { tommy: "son" } }) { numUids } updateCard1: updateCard(input: { filter: { nest: { eq: "2" } }, set: { tommy: "bill" } }) { numUids } updateLesson(input: { filter: { id: "12345" }, set: { me: false } }) { lesson { me cards { nest tommy } } numUids } }`);
+    });
+
     it('Update Multiple Deep Mutation with Multiple Records', () => {
         const d = new Dgraph('lesson').deep([{ field: 'cards', type: 'card' }, { field: 'pages', type: 'page', idField: 'pageId', idDirective: true }]).update({
             me: 1,
@@ -353,5 +364,7 @@ describe('easy-dgraph Functions', () => {
     it.todo('Nested Filters, could get complex with searching..., worth package size increase?');
 
     it.todo(`Deep Deep Updates?... deep({ field: 'cards.lesson' })`);
+
+    it.todo('Aggregate Counts with Filters');
 
 });
