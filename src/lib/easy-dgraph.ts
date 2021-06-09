@@ -216,7 +216,7 @@ export class Dgraph {
               _q: {},
               _filter: { [id]: sets[i][id] },
               _set: sets,
-              _alias: 'update-' + d.type + i
+              _alias: 'update' + this.titleType(d.type) + i
             };
             this._methods.push(m);
             delete sets[i][id];

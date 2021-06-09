@@ -330,23 +330,4 @@ describe('easy-dgraph Functions', () => {
         expect(d).toBe(`mutation { update-card0: updateCard(input: { filter: { id: "1" }, set: [{ tommy: "son" }, { tommy: "bill" }] }) { numUids } update-card1: updateCard(input: { filter: { id: "2" }, set: [{ tommy: "son" }, { tommy: "bill" }] }) { numUids } updateLesson(input: { filter: { id: "12345" }, set: { me: false } }) { lesson { me cards { id tommy } } numUids } }`);
     });
 
-    /*it('Update 2 Deep Mutation', () => {
-        const d = new Dgraph('lesson').deep([{ field: 'cards', type: 'card' }, { field: 'pods', type: 'pod' }]).update({
-            me: 1,
-            cards: {
-                tommy: 1
-            },
-            pods: {
-                free: 1
-            }
-        }).filter({ id: '12345' }).set({ me: false, cards: { id: '1', tommy: 'son' }, pods: { id: '22', f: 0 } }).build();
-        expect(d).toBe(`mutation { updateCard(input: { filter: { id: "1" }, set: { tommy: "son" } }) { numUids } updatePod(input: { filter: { id: "22" }, set: { f: 0 } }) { numUids } updateLesson(input: { filter: { id: "12345" }, set: { me: false } }) { lesson { me cards { tommy } pods { free } } numUids } }`);
-    });*/
-
-
-
-
-
-
-
 });
