@@ -200,9 +200,6 @@ export class Dgraph {
 
       for (const d of this._currentMethod._deep) {
 
-        // set array
-        let ids = [];
-
         let sets = this._currentMethod._set[d.field];
         sets = Array.isArray(sets)
           ? sets
@@ -211,24 +208,21 @@ export class Dgraph {
         const id = d.idField ? d.idField : 'id';
         for (const i in sets) {
           if (sets[i][id]) {
-            // copy over ids
-            ids.push(sets[i][id]);
+
+            // create new method for each node
+            const m: Method = {
+              _type: d.type,
+              _method: 'update',
+              _q: {},
+              _filter: { [id]: sets[i][id] },
+              _set: sets,
+              _alias: 'update-' + d.type + i
+            };
+            this._methods.push(m);
             delete sets[i][id];
           }
         }
-        if (sets.length === 1) {
-          sets = sets[0];
-          ids = ids[0];
-        }
         delete this._currentMethod._set[d.field];
-        const m: Method = {
-          _type: d.type,
-          _method: 'update',
-          _q: {},
-          _filter: { [id]: ids },
-          _set: sets
-        };
-        this._methods.push(m);
       }
     }
     // add method to be created, reset
