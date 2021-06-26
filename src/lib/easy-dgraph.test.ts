@@ -353,6 +353,17 @@ describe('easy-dgraph Functions', () => {
         expect(d).toBe(`mutation { updateCard0: updateCard(input: { filter: { id: "1" }, set: { tommy: "son" } }) { numUids } updateCard1: updateCard(input: { filter: { id: "2" }, set: { tommy: "bill" } }) { numUids } updateLesson(input: { filter: { id: "12345" }, set: { me: false } }) { lesson { me cards { id tommy } } numUids } }`);
     });
 
+    it('Update Deep Mutation with Multiple Records, Automatic ID', () => {
+        const d = new Dgraph('lesson').deep({ field: 'cards', type: 'card' }).update({
+            me: 1,
+            cards: {
+                id: 1,
+                tommy: 1
+            }
+        }).filter({ id: '12345' }).set({ me: false, cards: [{ tommy: 'son' }, { id: '2', tommy: 'bill' }] }).build();
+        expect(d).toBe(`mutation { updateCard1: updateCard(input: { filter: { id: "2" }, set: { tommy: "bill" } }) { numUids } updateLesson(input: { filter: { id: "12345" }, set: { me: false, cards: [{ tommy: "son" }] } }) { lesson { me cards { id tommy } } numUids } }`);
+    });
+
     it('Update Deep Mutation with Multiple Records @id Type', () => {
         const d = new Dgraph('lesson').deep({ field: 'cards', type: 'card', idDirective: true, idField: 'nest' }).update({
             me: 1,
@@ -380,11 +391,7 @@ describe('easy-dgraph Functions', () => {
     });
 
     // TODO
-    it.todo(`Nested Deletes..., will need some kind of chaining to search for belonging fields..., can't be done in package alone`);
-
-    it.todo(`Update Multiple Sets... have to figure out ID in Filter vs Regular Filter..., use .idField({ field: 'task', idDirective: true })`);
-
-    it.todo('Nested Filters, could get complex with searching..., worth package size increase?');
+    it.todo(`Add Multiple Set Input Capabilities`);
 
     it.todo(`Deep Deep Updates?... deep({ field: 'cards.lesson' })`);
 

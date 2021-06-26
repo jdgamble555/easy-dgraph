@@ -251,8 +251,6 @@ export class Dgraph {
           } else {
             delete set[d.field];
           }
-        } else if (current._method === 'delete') {
-          //
         }
       }
     }
