@@ -201,46 +201,61 @@ export class Dgraph {
     const current = this._currentMethod;
     const deep = current._deep;
     const set = current._set;
+    //const delete = current._del
 
     // deep mutations
     if (deep) {
 
       for (const d of deep) {
 
-        let subsets = set[d.field];
-        subsets = Array.isArray(subsets)
-          ? subsets
-          : [].concat(subsets);
+        // add or update items
+        if (set) {
 
-        const id = d.idField ? d.idField : 'id';
-        for (const i in subsets) {
-          if (subsets[i][id]) {
+          let subsets = set[d.field];
+          subsets = Array.isArray(subsets)
+            ? subsets
+            : [].concat(subsets);
 
-            // get id, remove it
-            const newId = subsets[i][id];
-            delete subsets[i][id];
+          const id = d.idField ? d.idField : 'id';
+          for (const i in subsets) {
+            if (subsets[i][id]) {
 
-            // @id or ID
-            const filter = d.idDirective
-              ? { [id]: { eq: newId } }
-              : { [id]: newId };
+              // get id, remove it
+              const newId = subsets[i][id];
+              delete subsets[i][id];
 
-            // create new method for each node
-            const m: Method = {
-              _type: d.type,
-              _method: 'update',
-              _q: {},
-              _filter: filter,
-              _set: subsets[i],
-              _alias: 'update' + this.titleType(d.type) + i
-            };
-            this._methods.push(m);
+              // @id or ID
+              const filter = d.idDirective
+                ? { [id]: { eq: newId } }
+                : { [id]: newId };
+
+              // create new method for each node
+              const m: Method = {
+                _type: d.type,
+                _method: 'update',
+                _q: {},
+                _filter: filter,
+                _set: subsets[i],
+                _alias: 'update' + this.titleType(d.type) + i
+              };
+              this._methods.push(m);
+
+              // delete field for add
+              delete subsets[i];
+            }
           }
+          // filter empty items
+          subsets = subsets.filter((e: any) => e);
+          if (subsets.length) {
+            set[d.field] = subsets;
+          } else {
+            delete set[d.field];
+          }
+        } else if (current._method === 'delete') {
+          //
         }
-        delete set[d.field];
       }
     }
-
     // add method to be created, reset
     this.set(set);
     this._methods.push(current);
