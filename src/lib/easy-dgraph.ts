@@ -289,7 +289,7 @@ export class Dgraph {
 
   private titleType(t: string): string {
     return t.charAt(0).toUpperCase()
-      + t.substr(1).toLowerCase();
+      + t.substring(1);
   }
 
   private addShortcuts(q: any, m: Method): any {

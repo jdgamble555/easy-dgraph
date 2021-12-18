@@ -214,7 +214,7 @@ describe('Query Tests', () => {
             tom: 1,
             becca: 1
         }).filter({ sum: true, me: false }).build();
-        expect(d).toBe(`query { queryPost(filter: { sum: true, me: false }) { tom becca } }`);
+        expect(d).toBe(`query { queryPOSt(filter: { sum: true, me: false }) { tom becca } }`);
     });
 
     it('Query `has` Filter', () => {
@@ -241,6 +241,13 @@ describe('Query Tests', () => {
             }
         }).build();
         expect(d).toBe(`query { queryPost { tom brandy(filter: { has: [name, email] }) } }`);
+    });
+
+    it('variable CaseNames', () => {
+        const d = new Dgraph('snakeMan').query({
+            hint: 1
+        }).filter({ h: false }).build();
+        expect(d).toBe(`query { querySnakeMan(filter: { h: false }) { hint } }`)
     });
 
 });
