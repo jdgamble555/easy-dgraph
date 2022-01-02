@@ -397,6 +397,11 @@ describe('easy-dgraph Functions', () => {
         expect(d).toBe(`mutation { updateCard0: updateCard(input: { filter: { id: "1" }, set: { tommy: "son" } }) { numUids } updateCard1: updateCard(input: { filter: { id: "2" }, set: { tommy: "bill" } }) { numUids } updatePage0: updatePage(input: { filter: { pageId: { eq: 1 } }, set: { words: "23" } }) { numUids } updateLesson(input: { filter: { id: "12345" }, set: { me: false } }) { lesson { me cards { id tommy } pages { pageId words } } numUids } }`);
     });
 
+    it('Type Prefixes', () => {
+        const d = new Dgraph('buddy').prefix('sound_').update({ id: 1 }).filter({ id: '12345' }).set({ adder: 't', subber: 'me' }).build();
+        expect(d).toBe(`mutation { updateSound_buddy(input: { filter: { id: "12345" }, set: { adder: "t", subber: "me" } }) { sound_buddy { id } numUids } }`);
+    })
+
     // TODO
     it.todo(`Add Multiple Set Input Capabilities`);
 

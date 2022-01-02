@@ -27,6 +27,7 @@ interface Method {
   _offset?: number;
   _upsert?: boolean;
   _idField?: string;
+  _prefix?: string;
 };
 
 export class Dgraph {
@@ -55,7 +56,7 @@ export class Dgraph {
     return jsonToGraphQLQuery(q, this._opts);
   }
 
-  type(type: string, alias?: string): this {
+  type(type: string, alias?: string, prefix?: string): this {
     if (this._currentMethod) {
       // add last method
       this.addMethod();
@@ -67,6 +68,14 @@ export class Dgraph {
     if (alias) {
       this._currentMethod._alias = alias;
     }
+    if (prefix) {
+      this._currentMethod._prefix = prefix;
+    }
+    return this;
+  }
+
+  prefix(prefix: string) {
+    this._currentMethod._prefix = prefix;
     return this;
   }
 
@@ -199,6 +208,13 @@ export class Dgraph {
   private addMethod() {
 
     const current = this._currentMethod;
+
+    // prefix
+    current._type =
+      current._prefix
+        ? current._prefix + current._type
+        : current._type;
+
     const deep = current._deep;
     const set = current._set;
     //const delete = current._del
