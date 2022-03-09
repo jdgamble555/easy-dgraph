@@ -52,6 +52,13 @@ export class Dgraph {
     }
   }
 
+  private reset() {
+    this._currentMethod = undefined;
+    this._methods = [];
+    this._opts = [];
+    this._operation = 'query';
+  }
+
   toGQL(q: any) {
     return jsonToGraphQLQuery(q, this._opts);
   }
@@ -438,9 +445,14 @@ export class Dgraph {
       obj[key] = q;
     }
 
-    return jsonToGraphQLQuery({
+    const r = jsonToGraphQLQuery({
       [this._operation]: obj
     }, this._opts).split(' (').join('(');
+
+    // reset object
+    this.reset();
+    
+    return r;
   }
 
   buildSubscription(): any {
